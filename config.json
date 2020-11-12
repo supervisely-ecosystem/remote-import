@@ -13,6 +13,7 @@
   "modal_template_state": {},
   "task_location": "workspace_tasks",
   "isolate": true,
-  "icon": "https://img.icons8.com/color/96/000000/cloud-link.png",
+  "icon_backup": "https://img.icons8.com/color/96/000000/cloud-link.png",
+  "icon": "https://img.icons8.com/color/96/000000/cloud-storage.png",
   "icon_background": "#FFFFFF"
 }
