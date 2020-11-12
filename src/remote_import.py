@@ -1,7 +1,6 @@
 import os
 from urllib.parse import urlparse
 import htmllistparse
-
 import supervisely_lib as sly
 
 
@@ -10,15 +9,12 @@ my_app = sly.AppService(ignore_task_id=True)
 TEAM_ID = int(os.environ['context.teamId'])
 WORKSPACE_ID = int(os.environ['context.workspaceId'])
 
-@my_app.callback("start_import")
-@sly.timeit
-def start_import(api: sly.Api, task_id, context, state, app_logger):
-    pass
-
+listing = []
 
 @my_app.callback("preview_remote")
 @sly.timeit
 def preview_remote(api: sly.Api, task_id, context, state, app_logger):
+    global listing
     api.task.set_field(task_id, "data.previewError", "")
     try:
         remote_dir = state["remoteDir"]
@@ -53,11 +49,6 @@ def preview_remote(api: sly.Api, task_id, context, state, app_logger):
         if meta_json_exists is False:
             raise FileNotFoundError("meta.json")
 
-        #@TODO: remove debug code
-        # temp = listing.copy()
-        # for i in range(100):
-        #     listing.extend(temp)
-
         fields = [
             {"field": "state.projectName", "payload": project_name},
             {"field": "data.listing", "payload": listing},
@@ -76,6 +67,7 @@ def _set_selected(listing_flags, flag):
         new_flags.append(selector)
     return new_flags
 
+
 @my_app.callback("select_all")
 @sly.timeit
 def select_all(api: sly.Api, task_id, context, state, app_logger):
@@ -83,6 +75,7 @@ def select_all(api: sly.Api, task_id, context, state, app_logger):
     new_flags = _set_selected(listing_flags, True)
     if len(new_flags) > 0:
         api.task.set_field(task_id, "state.listingFlags", new_flags)
+
 
 @my_app.callback("deselect_all")
 @sly.timeit
@@ -93,11 +86,22 @@ def deselect_all(api: sly.Api, task_id, context, state, app_logger):
         api.task.set_field(task_id, "state.listingFlags", new_flags)
 
 
-
-@my_app.callback("preprocessing")
-@sly.timeit
-def preprocessing(api: sly.Api, task_id, context, state, app_logger):
+def _import():
     pass
+
+@my_app.callback("start_import")
+@sly.timeit
+def start_import(api: sly.Api, task_id, context, state, app_logger):
+    remote_dir = state["remoteDir"]
+    listing_flags = state["listingFlags"]
+
+    #api.task.ge
+    # listing???
+    try:
+        pass
+    except Exception as e:
+        api.task.set_field(task_id, "data.importError", repr(e))
+
 
 
 def main():
