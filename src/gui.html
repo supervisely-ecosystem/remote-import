@@ -1,0 +1,45 @@
+<div>
+    <sly-card class="mt15"
+              title="Step 1. Define remote directory and select datasets to upload"
+              subtitle="Remote path should be defined to the folder with 'meta.json' file. Select one/several/all datasets that will be uploaded"
+    >
+        <div class="fflex">
+            <div style="width: 150px">Remote directory:</div>
+            <el-input v-model="state.remoteDir" placeholder="Please input path to remote directory"></el-input>
+        </div>
+        <el-button class="mt15" type="primary" @click="command('preview_remote');" :disabled="data.uploadStarted">
+            <i class="zmdi zmdi-globe" style="margin-right: 5px"></i> Preview remote
+        </el-button>
+
+    </sly-card>
+    <sly-card class="mt15" title="Step 2. Set up destination and start upload"
+              subtitle="Define destination: workspace/project. If destination doesn't exist, it will be created.
+              If dataset already exists, it will be skipped during upload.">
+        <div class="fflex">
+            <div style="width: 100px">Team:</div>
+            <el-input v-model="state.teamName" :disabled="true"></el-input>
+        </div>
+        <div class="fflex mt15">
+            <div style="width: 100px">Workspace:</div>
+            <el-input v-model="state.workspaceName" :disabled="data.uploadStarted"></el-input>
+        </div>
+        <div class="fflex mt15">
+            <div style="width: 100px">Project:</div>
+            <el-input v-model="state.projectName" placeholder="Please input result project name" :disabled="data.uploadStarted"></el-input>
+        </div>
+    </sly-card>
+
+    <sly-card class="mt15" title="Step 3. Start upload"
+              subtitle="Data in Supervisely format will be uploaded to defined destination.
+              JSON annotations will be directly uploaded to Supervisely. Images will be uploaded by links,
+              it means that data will NOT be copied to supervisely server and will be accessible by link.">
+        <el-button type="primary" @click="command('start_import');" :disabled="data.uploadStarted">
+            <i class="zmdi zmdi-play" style="margin-right: 5px"></i> Start upload
+        </el-button>
+        <div class="mt15" v-if="data.uploadStarted">
+            <div>Uploaded: {{data.uploadedCount}} / {{data.totalCount}}</div>
+            <el-progress :percentage="data.uploadProgress"></el-progress>
+        </div>
+        <div style="color: red" v-if="data.uploadError.length > 0">{{data.uploadError}}</div>
+    </sly-card>
+</div>
