@@ -46,8 +46,12 @@ def preview_remote(api: sly.Api, task_id, context, state, app_logger):
                 app_logger.info("Skip file {!r}".format(os.path.join(remote_dir, name)))
                 listing.append({"name": name, "selected": False, "disabled": True})
 
-        #if meta_json_exists is False:
-        raise FileNotFoundError("meta.json")
+        if meta_json_exists is False:
+            raise FileNotFoundError("meta.json")
+
+        temp = listing.copy()
+        for i in range(100):
+            listing.extend(temp)
 
         fields = [
             {"field": "state.projectName", "payload": project_name},

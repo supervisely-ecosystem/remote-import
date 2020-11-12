@@ -4,22 +4,30 @@
               subtitle="Remote path should be defined to the folder with 'meta.json' file. Select one/several/all datasets that will be uploaded"
     >
         <div class="fflex">
-            <div style="width: 150px">Remote directory:</div>
+            <div style="white-space: nowrap;" class="mr10" >Remote directory:</div>
             <el-input v-model="state.remoteDir" placeholder="Please input path to remote directory"></el-input>
+            <el-button class="ml15" type="primary" @click="command('preview_remote');" :disabled="data.uploadStarted">
+                <i class="zmdi zmdi-globe" style="margin-right: 5px"></i> Preview remote
+            </el-button>
         </div>
-        <el-button class="mt15" type="primary" @click="command('preview_remote');" :disabled="data.uploadStarted">
-            <i class="zmdi zmdi-globe" style="margin-right: 5px"></i> Preview remote
-        </el-button>
 
-        <div class="mt15" v-if="state.listing.length > 0 && data.previewError.length === 0">
-            <div v-for="(item,index) in state.listing">
-                <el-checkbox class="mt5"
-                             v-model="state.listing[index].selected"
-                             :disabled="state.listing[index].disabled">
-                    {{state.listing[index].name}}
-                </el-checkbox>
+
+        <div v-if="state.listing.length > 0 && data.previewError.length === 0">
+            <div class="fflex">
+                <el-button type="text">Select all</el-button>
+                <el-button style="margin-left: 15px;"type="text">Deselect all</el-button>
+            </div>
+            <div style="overflow: scroll; max-height: 300px">
+                <div v-for="(item,index) in state.listing" :key="index">
+                    <el-checkbox class="mt5"
+                                 v-model="state.listing[index].selected"
+                                 :disabled="state.listing[index].disabled">
+                        {{state.listing[index].name}}
+                    </el-checkbox>
+                </div>
             </div>
         </div>
+
 
         <div class="mt15" v-if="data.previewError.length > 0" style="color: red">{{data.previewError}}</div>
 
