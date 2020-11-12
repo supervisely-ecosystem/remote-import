@@ -4,6 +4,7 @@ import htmllistparse
 import requests
 import supervisely_lib as sly
 from slugify import slugify
+from functools import reduce
 
 
 my_app = sly.AppService(ignore_task_id=True)
@@ -51,7 +52,8 @@ def preview_remote(api: sly.Api, task_id, context, state, app_logger):
             raise FileNotFoundError("meta.json")
 
         fields = [
-            {"field": "state.projectName", "payload": slugify(project_name, lowercase=False, save_order=True)},
+            #{"field": "state.projectName", "payload": slugify(project_name, lowercase=False, save_order=True)},
+            {"field": "state.projectName", "payload": project_name},
             {"field": "data.listing", "payload": listing},
             {"field": "state.listingFlags", "payload": listing_flags},
         ]
@@ -94,7 +96,7 @@ def start_import(api: sly.Api, task_id, context, state, app_logger):
     listing_flags = state["listingFlags"]
 
     workspace_name = state["workspaceName"]
-    project_name = slugify(state["projectName"], lowercase=False, save_order=True)
+    project_name = state["projectName"] #slugify(state["projectName"], lowercase=False, save_order=True)
 
     add_to_existing_project = False #state["addToExisting"]
 
@@ -144,8 +146,10 @@ def start_import(api: sly.Api, task_id, context, state, app_logger):
                 app_logger.warn("Dataset {!r} already exists. Uploading is skipped".format(dataset.name))
                 continue
 
-            img_dir = urljoin(remote_dir, dataset_name, 'img')
-            ann_dir = urljoin(remote_dir, dataset_name, 'ann')
+            #img_dir = reduce(urljoin, [remote_dir, dataset_name, 'img'])
+            #ann_dir = reduce(urljoin, [remote_dir, dataset_name, 'ann'])
+            img_dir = os.path.join(remote_dir, dataset_name, 'img')
+            ann_dir = os.path.join(remote_dir, dataset_name, 'ann')
 
             cwd, img_listing = htmllistparse.fetch_listing(img_dir, timeout=120)
 
@@ -211,7 +215,7 @@ def main():
     state = {
         #"remoteDir": "http://localhost:8088/my_sly_project/",
         #"remoteDir": "http://172.20.10.2:8088/my_sly_project/",
-        "remoteDir":  "http://172.20.10.2:8088/lemons_annotated%202/",
+        "remoteDir":  "http://172.17.0.1:8088/lemons_annotated_2/",
         "teamName": team.name,
         "workspaceName": workspace.name,
         "projectName": "",
@@ -224,5 +228,7 @@ def main():
 
 #@TODO: slugify names
 #@TODO: remoteDir  - remove debug server
+#@TODO: add progress bar
+#@TODO: show output project + disable widgets
 if __name__ == "__main__":
     sly.main_wrapper("main", main)
