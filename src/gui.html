@@ -12,17 +12,21 @@
         </div>
 
 
-        <div v-if="state.listing.length > 0 && data.previewError.length === 0">
+        <div v-if="data.listing.length > 0 && data.previewError.length === 0">
             <div class="fflex">
-                <el-button type="text">Select all</el-button>
-                <el-button style="margin-left: 15px;"type="text">Deselect all</el-button>
+                <el-button type="text" @click="command('select_all');">
+                    <i class="zmdi zmdi-check-all"></i> Select all
+                </el-button>
+                <el-button type="text" @click="command('deselect_all');" style="margin-left: 25px;">
+                    <i class="zmdi zmdi-square-o"></i> Deselect all
+                </el-button>
             </div>
             <div style="overflow: scroll; max-height: 300px">
-                <div v-for="(item,index) in state.listing" :key="index">
+                <div v-for="(item,index) in data.listing" :key="index">
                     <el-checkbox class="mt5"
-                                 v-model="state.listing[index].selected"
-                                 :disabled="state.listing[index].disabled">
-                        {{state.listing[index].name}}
+                                 v-model="state.listingFlags[index].selected"
+                                 :disabled="state.listingFlags[index].disabled">
+                        {{data.listing[index].name}}
                     </el-checkbox>
                 </div>
             </div>
@@ -32,10 +36,6 @@
         <div class="mt15" v-if="data.previewError.length > 0" style="color: red">{{data.previewError}}</div>
 
     </sly-card>
-
-<!--    <pre>-->
-<!--        {{state.listing}}-->
-<!--    </pre>-->
 
     <sly-card class="mt15" title="Step 2. Set up destination and start upload"
               subtitle="Define destination: workspace/project. If destination doesn't exist, it will be created.

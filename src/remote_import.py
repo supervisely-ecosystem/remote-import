@@ -32,34 +32,65 @@ def preview_remote(api: sly.Api, task_id, context, state, app_logger):
         cwd, raw_listing = htmllistparse.fetch_listing(remote_dir, timeout=30)
 
         listing = []
+        listing_flags = []
         dataset_names = []
         meta_json_exists = False
         for file_entry in raw_listing:
             name = file_entry.name
             if name == 'meta.json':
                 meta_json_exists = True
-                listing.append({"name": name, "selected": True, "disabled": True})
+                listing.append({"name": name})
+                listing_flags.append({"selected": True, "disabled": True})
             elif name.endswith("/"):
-                listing.append({"name": name, "selected": True, "disabled": False})
+                listing.append({"name": name})
+                listing_flags.append({"selected": True, "disabled": False})
                 dataset_names.append(name.rstrip("/"))
             else:
                 app_logger.info("Skip file {!r}".format(os.path.join(remote_dir, name)))
-                listing.append({"name": name, "selected": False, "disabled": True})
+                listing.append({"name": name})
+                listing_flags.append({"selected": False, "disabled": True})
 
         if meta_json_exists is False:
             raise FileNotFoundError("meta.json")
 
-        temp = listing.copy()
-        for i in range(100):
-            listing.extend(temp)
+        #@TODO: remove debug code
+        # temp = listing.copy()
+        # for i in range(100):
+        #     listing.extend(temp)
 
         fields = [
             {"field": "state.projectName", "payload": project_name},
-            {"field": "state.listing", "payload": listing},
+            {"field": "data.listing", "payload": listing},
+            {"field": "state.listingFlags", "payload": listing_flags},
         ]
         api.app.set_fields(task_id, fields)
     except Exception as e:
         api.task.set_field(task_id, "data.previewError", repr(e))
+
+
+def _set_selected(listing_flags, flag):
+    new_flags = []
+    for selector in listing_flags:
+        if selector["disabled"] is False:
+            selector["selected"] = flag
+        new_flags.append(selector)
+    return new_flags
+
+@my_app.callback("select_all")
+@sly.timeit
+def select_all(api: sly.Api, task_id, context, state, app_logger):
+    listing_flags = state["listingFlags"]
+    new_flags = _set_selected(listing_flags, True)
+    if len(new_flags) > 0:
+        api.task.set_field(task_id, "state.listingFlags", new_flags)
+
+@my_app.callback("deselect_all")
+@sly.timeit
+def deselect_all(api: sly.Api, task_id, context, state, app_logger):
+    listing_flags = state["listingFlags"]
+    new_flags = _set_selected(listing_flags, False)
+    if len(new_flags) > 0:
+        api.task.set_field(task_id, "state.listingFlags", new_flags)
 
 
 
@@ -83,7 +114,8 @@ def main():
         "uploadProgress": 0,
         "uploadError": "",
         "taskId": my_app.task_id,
-        "previewError": ""
+        "previewError": "",
+        "listing": []
     }
 
     state = {
@@ -92,7 +124,7 @@ def main():
         "teamName": team.name,
         "workspaceName": workspace.name,
         "projectName": "",
-        "listing": []
+        "listingFlags": []
     }
 
     # Run application service
