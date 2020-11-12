@@ -148,8 +148,8 @@ def start_import(api: sly.Api, task_id, context, state, app_logger):
 
             #img_dir = reduce(urljoin, [remote_dir, dataset_name, 'img'])
             #ann_dir = reduce(urljoin, [remote_dir, dataset_name, 'ann'])
-            img_dir = os.path.join(remote_dir, dataset_name, 'img')
-            ann_dir = os.path.join(remote_dir, dataset_name, 'ann')
+            img_dir = os.path.join(remote_dir, dataset_name, 'img/')
+            ann_dir = os.path.join(remote_dir, dataset_name, 'ann/')
 
             cwd, img_listing = htmllistparse.fetch_listing(img_dir, timeout=120)
 
