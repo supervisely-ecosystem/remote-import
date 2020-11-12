@@ -1,6 +1,7 @@
 import os
-from urllib.parse import urlparse
+from urllib.parse import urlparse, urljoin
 import htmllistparse
+import requests
 import supervisely_lib as sly
 
 
@@ -95,10 +96,29 @@ def start_import(api: sly.Api, task_id, context, state, app_logger):
     remote_dir = state["remoteDir"]
     listing_flags = state["listingFlags"]
 
-    #api.task.ge
-    # listing???
+    workspace_name = state["workspaceName"]
+    project_name = state["projectName"]
+
+
     try:
-        pass
+        workspace = api.workspace.get_info_by_name(TEAM_ID, workspace_name)
+        if workspace is None:
+            workspace = api.workspace.create(TEAM_ID, workspace_name)
+            app_logger.info("Workspace {!r} is created".format(workspace.name))
+        else:
+            app_logger.info("Workspace {!r} already exists".format(workspace.name))
+
+        project = api.project.get_info_by_name(workspace.id, project_name)
+        if project is None:
+            project = api.project.create(workspace.id, project_name)
+            app_logger.info("Project {!r} is created".format(project.name))
+        else:
+            app_logger.info("Project {!r} already exists".format(project.name))
+
+        resp = requests.get(urljoin(remote_dir, 'meta.json'))
+        meta_json = resp.json()
+        meta = sly.ProjectMeta.from_json(meta_json)
+
     except Exception as e:
         api.task.set_field(task_id, "data.importError", repr(e))
 

@@ -58,6 +58,12 @@
               subtitle="Data in Supervisely format will be uploaded to defined destination.
               JSON annotations will be directly uploaded to Supervisely. Images will be uploaded by links,
               it means that data will NOT be copied to supervisely server and will be accessible by link.">
+
+        <sly-field title="Add to existing project"
+                   description="If checked">
+            <el-checkbox v-model="">Allow to add to existing project (classes will be merged)</el-checkbox>
+        </sly-field>
+
         <el-button type="primary" @click="command('start_import');" :disabled="data.uploadStarted">
             <i class="zmdi zmdi-play" style="margin-right: 5px"></i> Start upload
         </el-button>
