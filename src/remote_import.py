@@ -43,7 +43,7 @@ def preview_remote(api: sly.Api, task_id, context, state, app_logger):
                 listing_flags.append({"selected": True, "disabled": False})
                 dataset_names.append(name.rstrip("/"))
             else:
-                app_logger.info("Skip file {!r}".format(os.path.join(remote_dir, name)))
+                app_logger.info("Skip file {!r}".format(urljoin(remote_dir, name)))
                 listing.append({"name": name})
                 listing_flags.append({"selected": False, "disabled": True})
 
@@ -87,9 +87,6 @@ def deselect_all(api: sly.Api, task_id, context, state, app_logger):
         api.task.set_field(task_id, "state.listingFlags", new_flags)
 
 
-def _import():
-    pass
-
 @my_app.callback("start_import")
 @sly.timeit
 def start_import(api: sly.Api, task_id, context, state, app_logger):
@@ -99,7 +96,9 @@ def start_import(api: sly.Api, task_id, context, state, app_logger):
     workspace_name = state["workspaceName"]
     project_name = state["projectName"]
 
+    add_to_existing_project = state["addToExisting"]
 
+    existing_meta = None
     try:
         workspace = api.workspace.get_info_by_name(TEAM_ID, workspace_name)
         if workspace is None:
@@ -114,10 +113,74 @@ def start_import(api: sly.Api, task_id, context, state, app_logger):
             app_logger.info("Project {!r} is created".format(project.name))
         else:
             app_logger.info("Project {!r} already exists".format(project.name))
+            if add_to_existing_project is False:
+                raise ValueError("Project {!r} already exists. Allow add to existing project or change the name of "
+                                 "destination project. We recommend to upload to new project. Thus the existing project "
+                                 "will be safe.")
+            else:
+                existing_meta_json = api.project.get_meta(project.id)
+                existing_meta = sly.ProjectMeta.from_json(existing_meta_json)
 
         resp = requests.get(urljoin(remote_dir, 'meta.json'))
         meta_json = resp.json()
         meta = sly.ProjectMeta.from_json(meta_json)
+        if existing_meta is not None:
+            meta = existing_meta.merge(meta)
+
+        api.project.set_meta(project.id, meta)
+
+        for dataset_name, flags in zip(listing, listing_flags):
+            if flags["selected"] is False:
+                app_logger.info("Folder {!r} is not selected, it will be skipped".format(dataset_name))
+                continue
+
+            dataset = api.dataset.get_info_by_name(project.id, dataset_name)
+            if dataset is None:
+                dataset = api.dataset.create(project.id, dataset_name)
+                app_logger.info("Dataset {!r} is created".format(dataset.name))
+            else:
+                app_logger.warn("Dataset {!r} already exists. Uploading is skipped".format(dataset.name))
+                continue
+
+            img_dir = urljoin(remote_dir, dataset_name, 'img')
+            ann_dir = urljoin(remote_dir, dataset_name, 'ann')
+
+            cwd, img_listing = htmllistparse.fetch_listing(img_dir, timeout=120)
+
+            uploaded_to_dataset = 0
+            for batch in sly.batched(img_listing):
+                try:
+                    names = []
+                    image_urls_batch = []
+                    annotations_batch = []
+
+                    for file_entry in batch:
+                        name = file_entry.name
+                        try:
+                            img_url = urljoin(img_dir, name)
+                            ann_url = urljoin(ann_dir, name + sly.ANN_EXT)
+
+                            resp = requests.get(ann_url)
+                            ann_json = resp.json()
+                            ann = sly.Annotation.from_json(ann_json, meta)
+                        except Exception as e:
+                            app_logger.warn("Image {!r} and annotation {!r} are skipped due to error: {}"
+                                            .format(img_url, ann_url, repr(e)))
+
+                        names.append(name)
+                        image_urls_batch.append(img_url)
+                        annotations_batch.append(ann)
+
+                    img_infos = api.image.upload_links(dataset.id, names, image_urls_batch)
+                    uploaded_ids = [img_info.id for img_info in img_infos]
+                    api.annotation.upload_anns(uploaded_ids, annotations_batch)
+                    uploaded_to_dataset += len(uploaded_ids)
+                except Exception as e:
+                    app_logger.warn("Batch ({} items) of images is skipped due to error: {}"
+                                    .format(len(batch), repr(e)))
+
+            app_logger.info("Dataset {!r} is uploaded: {} images with annotations"
+                            .format(dataset.name, len(uploaded_to_dataset)))
 
     except Exception as e:
         api.task.set_field(task_id, "data.importError", repr(e))
@@ -148,7 +211,8 @@ def main():
         "teamName": team.name,
         "workspaceName": workspace.name,
         "projectName": "",
-        "listingFlags": []
+        "listingFlags": [],
+        "addToExisting": False
     }
 
     # Run application service
