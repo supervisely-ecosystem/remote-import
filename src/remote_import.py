@@ -3,6 +3,7 @@ from urllib.parse import urlparse, urljoin
 import htmllistparse
 import requests
 import supervisely_lib as sly
+from slugify import slugify
 
 
 my_app = sly.AppService(ignore_task_id=True)
@@ -30,18 +31,17 @@ def preview_remote(api: sly.Api, task_id, context, state, app_logger):
 
         listing = []
         listing_flags = []
-        dataset_names = []
         meta_json_exists = False
         for file_entry in raw_listing:
             name = file_entry.name
+            #name = slugify(name, lowercase=False, save_order=True)
             if name == 'meta.json':
                 meta_json_exists = True
                 listing.append({"name": name})
                 listing_flags.append({"selected": True, "disabled": True})
             elif name.endswith("/"):
-                listing.append({"name": name})
+                listing.append({"name": name.rstrip("/")})
                 listing_flags.append({"selected": True, "disabled": False})
-                dataset_names.append(name.rstrip("/"))
             else:
                 app_logger.info("Skip file {!r}".format(urljoin(remote_dir, name)))
                 listing.append({"name": name})
@@ -51,7 +51,7 @@ def preview_remote(api: sly.Api, task_id, context, state, app_logger):
             raise FileNotFoundError("meta.json")
 
         fields = [
-            {"field": "state.projectName", "payload": project_name},
+            {"field": "state.projectName", "payload": slugify(project_name, lowercase=False, save_order=True)},
             {"field": "data.listing", "payload": listing},
             {"field": "state.listingFlags", "payload": listing_flags},
         ]
@@ -94,9 +94,9 @@ def start_import(api: sly.Api, task_id, context, state, app_logger):
     listing_flags = state["listingFlags"]
 
     workspace_name = state["workspaceName"]
-    project_name = state["projectName"]
+    project_name = slugify(state["projectName"], lowercase=False, save_order=True)
 
-    add_to_existing_project = state["addToExisting"]
+    add_to_existing_project = False #state["addToExisting"]
 
     existing_meta = None
     try:
@@ -112,11 +112,12 @@ def start_import(api: sly.Api, task_id, context, state, app_logger):
             project = api.project.create(workspace.id, project_name)
             app_logger.info("Project {!r} is created".format(project.name))
         else:
-            app_logger.info("Project {!r} already exists".format(project.name))
+            app_logger.warn("Project {!r} already exists".format(project.name))
             if add_to_existing_project is False:
-                raise ValueError("Project {!r} already exists. Allow add to existing project or change the name of "
-                                 "destination project. We recommend to upload to new project. Thus the existing project "
-                                 "will be safe.")
+                app_logger.warn("Project {!r} already exists. Allow add to existing project or change the name of "
+                                "destination project. We recommend to upload to new project. Thus the existing project "
+                                "will be safe. New name will be generated".format(project.name))
+                project = api.project.create(workspace.id, project_name, change_name_if_conflict=True)
             else:
                 existing_meta_json = api.project.get_meta(project.id)
                 existing_meta = sly.ProjectMeta.from_json(existing_meta_json)
@@ -127,9 +128,10 @@ def start_import(api: sly.Api, task_id, context, state, app_logger):
         if existing_meta is not None:
             meta = existing_meta.merge(meta)
 
-        api.project.set_meta(project.id, meta)
+        api.project.update_meta(project.id, meta.to_json())
 
-        for dataset_name, flags in zip(listing, listing_flags):
+        for ds_info, flags in zip(listing, listing_flags):
+            dataset_name = ds_info['name']
             if flags["selected"] is False:
                 app_logger.info("Folder {!r} is not selected, it will be skipped".format(dataset_name))
                 continue
@@ -183,7 +185,8 @@ def start_import(api: sly.Api, task_id, context, state, app_logger):
                             .format(dataset.name, len(uploaded_to_dataset)))
 
     except Exception as e:
-        api.task.set_field(task_id, "data.importError", repr(e))
+        app_logger.error(repr(e))
+        #api.task.set_field(task_id, "data.importError", repr(e))
 
 
 
@@ -207,7 +210,8 @@ def main():
 
     state = {
         #"remoteDir": "http://localhost:8088/my_sly_project/",
-        "remoteDir": "http://172.20.10.2:8088/my_sly_project/",
+        #"remoteDir": "http://172.20.10.2:8088/my_sly_project/",
+        "remoteDir":  "http://172.20.10.2:8088/lemons_annotated%202/",
         "teamName": team.name,
         "workspaceName": workspace.name,
         "projectName": "",
@@ -218,6 +222,7 @@ def main():
     # Run application service
     my_app.run(data=data, state=state)
 
+#@TODO: slugify names
 #@TODO: remoteDir  - remove debug server
 if __name__ == "__main__":
     sly.main_wrapper("main", main)

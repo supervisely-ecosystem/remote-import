@@ -59,9 +59,12 @@
               JSON annotations will be directly uploaded to Supervisely. Images will be uploaded by links,
               it means that data will NOT be copied to supervisely server and will be accessible by link.">
 
-        <sly-field title="Add to existing project"
-                   description="If checked">
-            <el-checkbox v-model="addToExisting" :disabled="true">
+        <sly-field title="Add to existing project (unavailable in current version)"
+                   description="If checked classes will be merge and new datasets will be uploaded.
+                   Dataset will be skipped if dataset with same name already exists in project. Users sometimes make
+                   mistakes (e.g. remove classes with all annotations by mistake). In current version flag is
+                   unavailable to avoid data loss and keep existing annotations unchanged.">
+            <el-checkbox v-model="state.addToExisting" :disabled="true">
                 Allow to add to existing project (classes will be merged)
             </el-checkbox>
         </sly-field>
