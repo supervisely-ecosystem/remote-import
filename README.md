@@ -36,7 +36,7 @@ If you have ideas or suggestions, please post an idea in 💡[Supervisely Ideas 
 ## Preparation
 
 0. Be sure that docker is installed on the server.
-1. Go to your server and `cd` to directory with the data you want to connect. For example: `cd work/data`
+1. Go to your server and `cd` to directory with the data you want to connect. For example: `cd work/data`. We recommend tp avoid using special characters in paths (spaces, etc...).
 2. Run NGINX to to serve static files (images and annotation) by executing the following command: 
 
 `docker run -p 8088:80 -v $(pwd):/mnt/data jetbrainsinfra/nginx-file-listing:0.2`
@@ -63,12 +63,10 @@ Now you can check that data is accesible in browser:
 
 2. List of all files and directories will be shown. Every directory is dataset (because this release supports only supervisely format) with two folders `img` and `ann`. Select what datasets will be uploaded.
 
-3.
+3. Define destination project. Workspace will be created if not exist. If project already exists then error appears. Just change project name.
 
-- avoid using special characters in name, replace spaces with `_` or `-`
-- existing datasets will be skipped. 
-- app will be stopped automatically at the end
-- app stops on error
-- import images will be added later
+4. Press `Start upload` button. 
 
-## How to keep data private
+5. Link to created project and progress bars are available in output section. 
+
+6. App shuts down automatically on finish. Or you can stop it manually from app settings page.
