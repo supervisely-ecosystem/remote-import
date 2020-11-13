@@ -88,16 +88,52 @@ def deselect_all(api: sly.Api, task_id, context, state, app_logger):
     if len(new_flags) > 0:
         api.task.set_field(task_id, "state.listingFlags", new_flags)
 
+def _show_error(api, task_id, field, error, app_logger):
+    app_logger.warn(error)
+    api.task.set_field(task_id, field, error)
+
+def _increment_ds_progress(task_id, api, current, total):
+    fields = [
+        {"field": "data.uploadedDsCount", "payload": current},
+        {"field": "data.uploadDsProgress", "payload": round(current * 100 / total, 2)},
+    ]
+    api.app.set_fields(task_id, fields)
+
+def _increment_task_progress(task_id, api: sly.Api, sly_progress: sly.Progress):
+    fields = [
+        {"field": "data.uploadedDsCount", "payload": sly_progress.current},
+        {"field": "data.uploadDsProgress", "payload": round(sly_progress.current * 100 / sly_progress.total, 2)},
+    ]
+    api.app.set_fields(task_id, fields)
+    pass
 
 @my_app.callback("start_import")
 @sly.timeit
 def start_import(api: sly.Api, task_id, context, state, app_logger):
+    fields = [
+        {"field": "data.destinationError", "payload": ""},
+        {"field": "data.uploadError", "payload": ""},
+        {"field": "data.uploadStarted", "payload": True},
+        {"field": "data.uploadedCount", "payload": 0},
+        {"field": "data.totalCount", "payload": 0},
+        {"field": "data.uploadProgress", "payload": 0},
+        {"field": "data.uploadDsName", "payload": ""},
+        {"field": "data.uploadedDsCount", "payload": 0},
+        {"field": "data.totalDsCount", "payload": 0},
+        {"field": "data.uploadDsProgress", "payload": 0},
+    ]
+    api.app.set_fields(task_id, fields)
+
     remote_dir = state["remoteDir"]
     listing_flags = state["listingFlags"]
 
     workspace_name = state["workspaceName"]
     project_name = state["projectName"] #slugify(state["projectName"], lowercase=False, save_order=True)
+    if project_name == "":
+        _show_error(api, task_id, "data.destinationError", "Project name is not defined", app_logger)
+        return
 
+    #@TODO: will be added in future releases
     add_to_existing_project = False #state["addToExisting"]
 
     existing_meta = None
@@ -114,7 +150,9 @@ def start_import(api: sly.Api, task_id, context, state, app_logger):
             project = api.project.create(workspace.id, project_name)
             app_logger.info("Project {!r} is created".format(project.name))
         else:
-            app_logger.warn("Project {!r} already exists".format(project.name))
+            _show_error(api, task_id, "data.destinationError", "Project {!r} already exists".format(project.name), app_logger)
+            return
+
             if add_to_existing_project is False:
                 app_logger.warn("Project {!r} already exists. Allow add to existing project or change the name of "
                                 "destination project. We recommend to upload to new project. Thus the existing project "
@@ -132,18 +170,23 @@ def start_import(api: sly.Api, task_id, context, state, app_logger):
 
         api.project.update_meta(project.id, meta.to_json())
 
+        datasets_to_upload = []
         for ds_info, flags in zip(listing, listing_flags):
             dataset_name = ds_info['name']
             if flags["selected"] is False:
                 app_logger.info("Folder {!r} is not selected, it will be skipped".format(dataset_name))
                 continue
+            datasets_to_upload.append(dataset_name)
 
+        api.task.set_field(task_id, "data.totalDsCount", len(datasets_to_upload))
+        for index, dataset_name in enumerate(datasets_to_upload):
             dataset = api.dataset.get_info_by_name(project.id, dataset_name)
             if dataset is None:
                 dataset = api.dataset.create(project.id, dataset_name)
                 app_logger.info("Dataset {!r} is created".format(dataset.name))
             else:
                 app_logger.warn("Dataset {!r} already exists. Uploading is skipped".format(dataset.name))
+                _increment_ds_progress(task_id, api, index + 1, len(datasets_to_upload))
                 continue
 
             #img_dir = reduce(urljoin, [remote_dir, dataset_name, 'img'])
@@ -151,10 +194,18 @@ def start_import(api: sly.Api, task_id, context, state, app_logger):
             img_dir = os.path.join(remote_dir, dataset_name, 'img/')
             ann_dir = os.path.join(remote_dir, dataset_name, 'ann/')
 
-            cwd, img_listing = htmllistparse.fetch_listing(img_dir, timeout=120)
+            cwd, img_listing = htmllistparse.fetch_listing(img_dir, timeout=30)
 
             uploaded_to_dataset = 0
-            for batch in sly.batched(img_listing):
+            fields = [
+                {"field": "data.totalCount", "payload": len(img_listing)},
+                {"field": "data.uploadDsName", "payload": dataset.name},
+            ]
+            api.app.set_fields(task_id, fields)
+
+            task_progress = sly.Progress("Uploading dataset {!r}".format(dataset.name), len(img_listing))
+            #@TODO: remote batch_size=1
+            for batch in sly.batched(img_listing, batch_size=1):
                 try:
                     names = []
                     image_urls_batch = []
@@ -163,7 +214,8 @@ def start_import(api: sly.Api, task_id, context, state, app_logger):
                     for file_entry in batch:
                         name = file_entry.name
                         try:
-                            img_url = urljoin(img_dir, name)
+                            # @TODO: for debug
+                            img_url = 'https://i.imgur.com/uFYNj9Z.jpg' #urljoin(img_dir, name)
                             ann_url = urljoin(ann_dir, name + sly.ANN_EXT)
 
                             resp = requests.get(ann_url)
@@ -184,13 +236,17 @@ def start_import(api: sly.Api, task_id, context, state, app_logger):
                 except Exception as e:
                     app_logger.warn("Batch ({} items) of images is skipped due to error: {}"
                                     .format(len(batch), repr(e)))
+                finally:
+                    task_progress.iters_done_report(len(batch))
+                    _increment_task_progress(task_id, api, task_progress)
 
+            _increment_ds_progress(task_id, api, index + 1, len(datasets_to_upload))
             app_logger.info("Dataset {!r} is uploaded: {} images with annotations"
-                            .format(dataset.name, len(uploaded_to_dataset)))
+                            .format(dataset.name, uploaded_to_dataset))
 
     except Exception as e:
         app_logger.error(repr(e))
-        #api.task.set_field(task_id, "data.importError", repr(e))
+        api.task.set_field(task_id, "data.uploadError", repr(e))
 
 
 
@@ -203,13 +259,18 @@ def main():
 
     data = {
         "uploadStarted": False,
+        "uploadDsName": "",
+        "uploadedDsCount": 0,
+        "totalDsCount": 0,
         "uploadedCount": 0,
         "totalCount": 0,
+        "uploadDsProgress": 0,
         "uploadProgress": 0,
         "uploadError": "",
         "taskId": my_app.task_id,
         "previewError": "",
-        "listing": []
+        "listing": [],
+        "destinationError": ""
     }
 
     state = {
@@ -230,5 +291,7 @@ def main():
 #@TODO: remoteDir  - remove debug server
 #@TODO: add progress bar
 #@TODO: show output project + disable widgets
+#@TODO: nginx volume - slow start??
+#@TODO: remove debug image urls
 if __name__ == "__main__":
     sly.main_wrapper("main", main)

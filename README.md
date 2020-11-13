@@ -2,6 +2,7 @@
 
 ## Prepare access to your data
 
+cd to the directory with data
 `cd to folder`
 
 and then 

@@ -52,6 +52,7 @@
             <div style="width: 100px">Project:</div>
             <el-input v-model="state.projectName" placeholder="Please input result project name" :disabled="data.uploadStarted"></el-input>
         </div>
+        <div style="color: red;" class="mt10" v-if="data.destinationError.length > 0">{{data.destinationError}}</div>
     </sly-card>
 
     <sly-card class="mt15" title="Step 3. Start upload"
@@ -73,7 +74,10 @@
             <i class="zmdi zmdi-play" style="margin-right: 5px"></i> Start upload
         </el-button>
         <div class="mt15" v-if="data.uploadStarted">
-            <div>Uploaded: {{data.uploadedCount}} / {{data.totalCount}}</div>
+            <div>Processed datasets: {{data.uploadedDsCount}} / {{data.totalDsCount}}</div>
+            <el-progress :percentage="data.uploadDsProgress"></el-progress>
+            <br/>
+            <div>Dataset '{{data.uploadDsName}}': {{data.uploadedCount}} / {{data.totalCount}} images</div>
             <el-progress :percentage="data.uploadProgress"></el-progress>
         </div>
         <div style="color: red" v-if="data.uploadError.length > 0">{{data.uploadError}}</div>
