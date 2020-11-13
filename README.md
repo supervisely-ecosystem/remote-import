@@ -41,6 +41,13 @@ If you have ideas or suggestions, please post an idea in 💡[Supervisely Ideas 
 
 `docker run -p 8088:80 -v $(pwd):/mnt/data jetbrainsinfra/nginx-file-listing:0.2`
 
+3. ⚠️ TODO: explain how to deploy it in isolated environment for Enterprise Instances
+
+Now you can check that data is accesible in browser:
+
+<img src="https://media4.giphy.com/media/tgVlRYEBJKsGbZfZnM/giphy.gif"/>
+
+
 
 ## Prepare access to your data
 
