@@ -3,11 +3,9 @@
 # sudo chmod +x ./docker/prepare_dockerimage.sh
 # ./docker/prepare_dockerimage.sh
 
-
 VERSION='1.0.0'
 
-#BASE_DOCKER_IMAGE='supervisely/base-py-sdk:6'
-BASE_DOCKER_IMAGE='docker.deepsystems.io/supervisely/five/base-py-sdk-internal:remote-import'
+BASE_DOCKER_IMAGE='supervisely/base-py-sdk:6'
 
 DOCKER_IMAGE='supervisely/remote-import'
 DOCKER_IMAGE_LATEST=$DOCKER_IMAGE':latest'

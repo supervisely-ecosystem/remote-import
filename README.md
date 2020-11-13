@@ -18,5 +18,6 @@ then go to page in your browser and check that files can be viewed or downloaded
 - existing datasets will be skipped. 
 - app will be stopped automatically at the end
 - app stops on error
+- import images will be added later
 
 ## How to keep data private
