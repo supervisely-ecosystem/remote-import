@@ -50,7 +50,7 @@ Now you can check that data is accesible in browser:
 ## How To Run 
 **Step 1**: Add app to your team from Ecosystem if it is not there.
 
-**Step 2**: Run from context menu of project: `thee dots button` -> `Run App` -> `Training data` -> `Assign train\val tags to images`.
+**Step 2**: Go to `Plugins & Apps` section in current team. And press `Run` button in front of application.
 
 **Step 3**: You will be redirected to `Current Workspace`->`Tasks` page. Wait until app is started and press `Open` button. 
 
