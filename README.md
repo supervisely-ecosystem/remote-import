@@ -48,23 +48,14 @@ Now you can check that data is accesible in browser:
 <img src="https://media4.giphy.com/media/tgVlRYEBJKsGbZfZnM/giphy.gif"/>
 
 
-
-## Prepare access to your data
-
-cd to the directory with data
-`cd to folder`
-
-and then 
-
-`docker run -p 8088:80 -v $(pwd):/mnt/data jetbrainsinfra/nginx-file-listing:0.2`
-
-then go to page in your browser and check that files can be viewed or downloaded 
-
-`http://localhost:8088/`
-
-RECOMMENDED FOR ENTERPRISES
-
 ## How to use
+
+1. Put address to the remote directory with project in Supervisely format (where `meta.json` is). And press `Preview remote`.
+
+2. List of all files and directories will be shown. Every directory is dataset (because this release supports only supervisely format) with two folders `img` and `ann`. Select what datasets will be uploaded.
+
+3.
+
 - avoid using special characters in name, replace spaces with `_` or `-`
 - existing datasets will be skipped. 
 - app will be stopped automatically at the end
