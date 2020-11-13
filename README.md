@@ -21,11 +21,9 @@
 
 ## Overview
 
-Application tags images in project. User can choose percentage of images that will be tagged as "train" or "val" and several additional options. Neural Networks will use these tags to split data into training/validation datasets. 
+Connect your remote data storage to Supervisely Platform without data duplication.   
 
-<img src="https://i.imgur.com/KA8kXBr.png"/>
-
-
+<img src="https://i.imgur.com/AmnUCBV.png"/>
 
 
 # remote-import
