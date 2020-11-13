@@ -1,5 +1,7 @@
 # remote-import
 
+https://i.imgur.com/2Frrx7i.png
+
 ## Prepare access to your data
 
 cd to the directory with data
