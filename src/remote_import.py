@@ -257,6 +257,8 @@ def start_import(api: sly.Api, task_id, context, state, app_logger):
                     #only once + to check the image urls are loaded correctly
                     if update_res_project_icon is None:
                         pinfo = api.project.get_info_by_id(project.id)
+                        if pinfo.reference_image_url is None:
+                            raise RuntimeError("Preview image is not accessible. Check that image URLs are public.")
                         update_res_project_icon = api.image.preview_url(pinfo.reference_image_url, 100, 100),
                         api.task.set_field(task_id, "data.resultProjectPreviewUrl", update_res_project_icon)
 
