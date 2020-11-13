@@ -303,7 +303,7 @@ def main():
     state = {
         #"remoteDir": "http://localhost:8088/my_sly_project/",
         #"remoteDir": "http://172.20.10.2:8088/my_sly_project/",
-        "remoteDir":  "http://172.17.0.1:8088/lemons_annotated_2/",
+        "remoteDir":  "",#"http://172.17.0.1:8088/lemons_annotated_2/",
         "teamName": team.name,
         "workspaceName": workspace.name,
         "projectName": "",
@@ -316,6 +316,5 @@ def main():
 
 #@TODO: slugify names
 #@TODO: nginx volume - slow start??
-#@TODO: remove debug image urls
 if __name__ == "__main__":
     sly.main_wrapper("main", main)
