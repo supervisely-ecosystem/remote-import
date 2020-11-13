@@ -47,6 +47,15 @@ Now you can check that data is accesible in browser:
 
 <img src="https://media4.giphy.com/media/tgVlRYEBJKsGbZfZnM/giphy.gif"/>
 
+## How To Run 
+**Step 1**: Add app to your team from Ecosystem if it is not there.
+
+**Step 2**: Run from context menu of project: `thee dots button` -> `Run App` -> `Training data` -> `Assign train\val tags to images`.
+
+**Step 3**: You will be redirected to `Current Workspace`->`Tasks` page. Wait until app is started and press `Open` button. 
+
+**Note**: Running procedure is simialr for almost all apps that are started from context menu. Example steps with screenshots are [here in how-to-run section](https://github.com/supervisely-ecosystem/merge-classes#how-to-run). 
+
 
 ## How to use
 
