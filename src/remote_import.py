@@ -220,10 +220,7 @@ def start_import(api: sly.Api, task_id, context, state, app_logger):
             api.app.set_fields(task_id, fields)
 
             task_progress = sly.Progress("Uploading dataset {!r}".format(dataset.name), len(img_listing))
-            #@TODO: remote batch_size=1
-            for batch in sly.batched(img_listing, batch_size=1):
-                #@TODO: sleep for debug
-                time.sleep(1)
+            for batch in sly.batched(img_listing, batch_size=50):
                 try:
                     names = []
                     image_urls_batch = []
@@ -232,8 +229,7 @@ def start_import(api: sly.Api, task_id, context, state, app_logger):
                     for file_entry in batch:
                         name = file_entry.name
                         try:
-                            # @TODO: for debug
-                            img_url = 'https://i.imgur.com/uFYNj9Z.jpg' #urljoin(img_dir, name)
+                            img_url = urljoin(img_dir, name) #'https://i.imgur.com/uFYNj9Z.jpg'
                             ann_url = urljoin(ann_dir, name + sly.ANN_EXT)
 
                             resp = requests.get(ann_url)
