@@ -36,7 +36,7 @@ If you have ideas or suggestions, please post an idea in 💡[Supervisely Ideas 
 ## Preparation
 
 0. Be sure that docker is installed on the server.
-1. Go to your server and `cd` to directory with the data you want to connect. For example: `cd work/data`. We recommend tp avoid using special characters in paths (spaces, etc...).
+1. Go to your server and `cd` to directory with the data you want to connect. For example: `cd work/data`. We recommend to avoid using special characters in paths (spaces, etc...).
 2. Run NGINX to to serve static files (images and annotation) by executing the following command: 
 
 `docker run -p 8088:80 -v $(pwd):/mnt/data jetbrainsinfra/nginx-file-listing:0.2`
