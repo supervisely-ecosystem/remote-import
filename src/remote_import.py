@@ -2,6 +2,7 @@ import os
 from urllib.parse import urlparse, urljoin
 import htmllistparse
 import requests
+import time
 import supervisely_lib as sly
 from slugify import slugify
 from functools import reduce
@@ -90,19 +91,23 @@ def deselect_all(api: sly.Api, task_id, context, state, app_logger):
 
 def _show_error(api, task_id, field, error, app_logger):
     app_logger.warn(error)
-    api.task.set_field(task_id, field, error)
+    fields = [
+        {"field": field, "payload": error},
+        {"field": "data.uploadStarted", "payload": False},
+    ]
+    api.app.set_fields(task_id, fields)
 
 def _increment_ds_progress(task_id, api, current, total):
     fields = [
         {"field": "data.uploadedDsCount", "payload": current},
-        {"field": "data.uploadDsProgress", "payload": round(current * 100 / total, 2)},
+        {"field": "data.uploadDsProgress", "payload": int(current * 100 / total)},
     ]
     api.app.set_fields(task_id, fields)
 
 def _increment_task_progress(task_id, api: sly.Api, sly_progress: sly.Progress):
     fields = [
-        {"field": "data.uploadedDsCount", "payload": sly_progress.current},
-        {"field": "data.uploadDsProgress", "payload": round(sly_progress.current * 100 / sly_progress.total, 2)},
+        {"field": "data.uploadedCount", "payload": sly_progress.current},
+        {"field": "data.uploadProgress", "payload": int(sly_progress.current * 100 / sly_progress.total)},
     ]
     api.app.set_fields(task_id, fields)
     pass
@@ -176,6 +181,9 @@ def start_import(api: sly.Api, task_id, context, state, app_logger):
             if flags["selected"] is False:
                 app_logger.info("Folder {!r} is not selected, it will be skipped".format(dataset_name))
                 continue
+            if flags["disabled"] is True:
+                app_logger.info("File {!r} is skipped".format(dataset_name))
+                continue
             datasets_to_upload.append(dataset_name)
 
         api.task.set_field(task_id, "data.totalDsCount", len(datasets_to_upload))
@@ -206,6 +214,8 @@ def start_import(api: sly.Api, task_id, context, state, app_logger):
             task_progress = sly.Progress("Uploading dataset {!r}".format(dataset.name), len(img_listing))
             #@TODO: remote batch_size=1
             for batch in sly.batched(img_listing, batch_size=1):
+                #@TODO: sleep for debug
+                time.sleep(1)
                 try:
                     names = []
                     image_urls_batch = []
