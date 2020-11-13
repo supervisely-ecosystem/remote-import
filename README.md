@@ -41,7 +41,7 @@ If you have ideas or suggestions, please post an idea in 💡[Supervisely Ideas 
 
 `docker run -p 8088:80 -v $(pwd):/mnt/data jetbrainsinfra/nginx-file-listing:0.2`
 
-3. ⚠️ TODO: explain how to deploy it in isolated environment for Enterprise Instances
+3. ⚠️ By default your new nginx web server is available for outside world. If needed, change `nginx.conf` to disallow it.
 
 Now you can check that data is accesible in browser:
 
