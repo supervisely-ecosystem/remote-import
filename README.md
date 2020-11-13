@@ -26,8 +26,9 @@ Connect your remote data storage to Supervisely Platform without data duplicatio
 
 **NOTE #1:** most frequest usecase is when Enterprise Customer would like to connect huge existing data storage (tens of terabytes) and avoid data duplication. In other cases we recommend to use general import procedure to store data in Supervisely Data Storage.  
 
-**NOTE #2:** this release works only with data structured in Supervisely format. In future versions raw images, videos, and other formats will be added. If you have ideas or suggestions, please post an idea in 💡[Supervisely Ideas Exchange](https://ideas.supervise.ly/). 
-If you have a feature  
+**NOTE #2:** this release works only with data structured in Supervisely format. In future versions raw images, videos, and other formats will be added. 
+
+If you have ideas or suggestions, please post an idea in 💡[Supervisely Ideas Exchange](https://ideas.supervise.ly/). 
 
 <img src="https://i.imgur.com/AmnUCBV.png"/>
 
