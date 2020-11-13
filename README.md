@@ -28,7 +28,7 @@ Connect your remote data storage to Supervisely Platform without data duplicatio
 
 **NOTE #2:** this release works only with data structured in Supervisely format. In future versions raw images, videos, and other formats will be added. 
 
-If you have ideas or suggestions, please post an idea in 💡[Supervisely Ideas Exchange](https://ideas.supervise.ly/). 
+If you have ideas or suggestions, please post an idea in 💡[Supervisely Ideas Exchange](https://ideas.supervise.ly/) or chat with us in slack. 
 
 <img src="https://i.imgur.com/AmnUCBV.png"/>
 
