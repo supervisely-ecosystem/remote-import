@@ -167,6 +167,14 @@ def start_import(api: sly.Api, task_id, context, state, app_logger):
                 existing_meta_json = api.project.get_meta(project.id)
                 existing_meta = sly.ProjectMeta.from_json(existing_meta_json)
 
+        update_res_project_icon = None
+        fields = [
+            {"field": "data.resultProject", "payload": project.name},
+            {"field": "data.resultProjectId", "payload": project.id},
+            # {"field": "data.resultProjectPreviewUrl", "payload": 0},
+        ]
+        api.app.set_fields(task_id, fields)
+
         resp = requests.get(urljoin(remote_dir, 'meta.json'))
         meta_json = resp.json()
         meta = sly.ProjectMeta.from_json(meta_json)
@@ -250,6 +258,12 @@ def start_import(api: sly.Api, task_id, context, state, app_logger):
                     task_progress.iters_done_report(len(batch))
                     _increment_task_progress(task_id, api, task_progress)
 
+                    #only once + to check the image urls are loaded correctly
+                    if update_res_project_icon is None:
+                        pinfo = api.project.get_info_by_id(project.id)
+                        update_res_project_icon = api.image.preview_url(pinfo.reference_image_url, 100, 100),
+                        api.task.set_field(task_id, "data.resultProjectPreviewUrl", update_res_project_icon)
+
             _increment_ds_progress(task_id, api, index + 1, len(datasets_to_upload))
             app_logger.info("Dataset {!r} is uploaded: {} images with annotations"
                             .format(dataset.name, uploaded_to_dataset))
@@ -258,6 +272,7 @@ def start_import(api: sly.Api, task_id, context, state, app_logger):
         app_logger.error(repr(e))
         api.task.set_field(task_id, "data.uploadError", repr(e))
 
+    my_app.stop()
 
 
 def main():
@@ -280,7 +295,10 @@ def main():
         "taskId": my_app.task_id,
         "previewError": "",
         "listing": [],
-        "destinationError": ""
+        "destinationError": "",
+        "resultProject": "",
+        "resultProjectId": 0,
+        "resultProjectPreviewUrl": "",
     }
 
     state = {
@@ -303,5 +321,6 @@ def main():
 #@TODO: show output project + disable widgets
 #@TODO: nginx volume - slow start??
 #@TODO: remove debug image urls
+#@TODO: how to refresh project Url
 if __name__ == "__main__":
     sly.main_wrapper("main", main)

@@ -5,7 +5,10 @@
     >
         <div class="fflex">
             <div style="white-space: nowrap;" class="mr10" >Remote directory:</div>
-            <el-input v-model="state.remoteDir" placeholder="Please input path to remote directory"></el-input>
+            <el-input v-model="state.remoteDir"
+                      placeholder="Please input path to remote directory"
+                      :disabled="data.uploadStarted">
+            </el-input>
             <el-button class="ml15" type="primary" @click="command('preview_remote');" :disabled="data.uploadStarted">
                 <i class="zmdi zmdi-globe" style="margin-right: 5px"></i> Preview remote
             </el-button>
@@ -73,6 +76,15 @@
         <el-button type="primary" @click="command('start_import');" :disabled="data.uploadStarted">
             <i class="zmdi zmdi-play" style="margin-right: 5px"></i> Start upload
         </el-button>
+
+    </sly-card>
+
+    <sly-card class="mt15" title="Output" subtitle="Link to result project and progress bars">
+        <sly-field v-if="data.resultProject.length > 0" title="" description="New project has been successfully created">
+            <a slot="title" target="_blank" :href="`/projects/${data.resultProjectId}/datasets`">{{data.resultProject}}</a>
+            <sly-icon slot="icon" :options="{ imageUrl: `${data.resultProjectPreviewUrl}` }"/>
+        </sly-field>
+
         <div class="mt15" v-if="data.uploadStarted">
             <div>Processed datasets: {{data.uploadedDsCount}} / {{data.totalDsCount}}</div>
             <el-progress :percentage="data.uploadDsProgress"></el-progress>
