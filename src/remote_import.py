@@ -316,11 +316,7 @@ def main():
     my_app.run(data=data, state=state)
 
 #@TODO: slugify names
-#@TODO: remoteDir  - remove debug server
-#@TODO: add progress bar
-#@TODO: show output project + disable widgets
 #@TODO: nginx volume - slow start??
 #@TODO: remove debug image urls
-#@TODO: how to refresh project Url
 if __name__ == "__main__":
     sly.main_wrapper("main", main)

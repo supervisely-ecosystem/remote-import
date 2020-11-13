@@ -14,6 +14,9 @@ then go to page in your browser and check that files can be viewed or downloaded
 `http://localhost:8088/`
 
 ## How to use
-
+- avoid using special characters in name, replace spaces with `_` or `-`
+- existing datasets will be skipped. 
+- app will be stopped automatically at the end
+- app stops on error
 
 ## How to keep data private
