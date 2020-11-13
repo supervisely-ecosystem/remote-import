@@ -39,7 +39,6 @@ If you have ideas or suggestions, please post an idea in 💡[Supervisely Ideas 
 1. Go to your server and `cd` to directory with the data you want to connect. For example: `cd work/data`
 2. Execute following command:
 `docker run -p 8088:80 -v $(pwd):/mnt/data jetbrainsinfra/nginx-file-listing:0.2`
-
 This command starts NGINX to serve static files (images and annotation).
 
 ## Prepare access to your data
