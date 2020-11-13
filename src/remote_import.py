@@ -270,6 +270,7 @@ def start_import(api: sly.Api, task_id, context, state, app_logger):
         app_logger.error(repr(e))
         api.task.set_field(task_id, "data.uploadError", repr(e))
 
+    api.task.set_output_project(task_id, project.id, project.name)
     my_app.stop()
 
 
