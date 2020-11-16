@@ -238,6 +238,7 @@ def start_import(api: sly.Api, task_id, context, state, app_logger):
                         except Exception as e:
                             app_logger.warn("Image {!r} and annotation {!r} are skipped due to error: {}"
                                             .format(img_url, ann_url, repr(e)))
+                            continue
 
                         names.append(name)
                         image_urls_batch.append(img_url)
