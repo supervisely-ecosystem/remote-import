@@ -233,7 +233,13 @@ def start_import(api: sly.Api, task_id, context, state, app_logger):
                             ann_url = urljoin(ann_dir, name + sly.ANN_EXT)
 
                             resp = requests.get(ann_url)
+                            if resp.status_code == 404:
+                                ann_url = urljoin(ann_dir, sly.fs.get_file_name(name) + sly.ANN_EXT)
+                                resp = requests.get(ann_url)
+
+                            resp.raise_for_status()
                             ann_json = resp.json()
+
                             ann = sly.Annotation.from_json(ann_json, meta)
                         except Exception as e:
                             app_logger.warn("Image {!r} and annotation {!r} are skipped due to error: {}"
@@ -304,7 +310,7 @@ def main():
     state = {
         #"remoteDir": "http://localhost:8088/my_sly_project/",
         #"remoteDir": "http://172.20.10.2:8088/my_sly_project/",
-        "remoteDir":  "",#"http://172.17.0.1:8088/lemons_annotated_2/",
+        "remoteDir":  "", #"http://172.17.0.1:8088/lemons_annotated_2/",
         "teamName": team.name,
         "workspaceName": workspace.name,
         "projectName": "",
