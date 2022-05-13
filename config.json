@@ -3,7 +3,7 @@
   "type": "app",
   "categories": [
     "import",
-    "http"
+    "images"
   ],
   "description": "Connect your remote storage and import data without duplication. Data is stored on your server but visible in Supervisely",
   "docker_image": "supervisely/remote-import:1.0.0",
