@@ -3,17 +3,18 @@ from urllib.parse import urlparse, urljoin
 import htmllistparse
 import requests
 import time
-import supervisely_lib as sly
+import supervisely as sly
+from supervisely.app.v1.app_service import AppService
 from slugify import slugify
 from functools import reduce
 
-
-my_app = sly.AppService(ignore_task_id=True)
+my_app: AppService = AppService(ignore_task_id=True)
 
 TEAM_ID = int(os.environ['context.teamId'])
 WORKSPACE_ID = int(os.environ['context.workspaceId'])
 
 listing = []
+
 
 @my_app.callback("preview_remote")
 @sly.timeit
@@ -25,7 +26,7 @@ def preview_remote(api: sly.Api, task_id, context, state, app_logger):
         parts = urlparse(remote_dir)
         project_name = parts.path.rstrip("/")
         if project_name not in ["", "/"]:
-            project_name = sly.fs.get_file_name(project_name) # last directory name from path
+            project_name = sly.fs.get_file_name(project_name)  # last directory name from path
         else:
             project_name = ""
 
@@ -36,7 +37,7 @@ def preview_remote(api: sly.Api, task_id, context, state, app_logger):
         meta_json_exists = False
         for file_entry in raw_listing:
             name = file_entry.name
-            #name = slugify(name, lowercase=False, save_order=True)
+            # name = slugify(name, lowercase=False, save_order=True)
             if name == 'meta.json':
                 meta_json_exists = True
                 listing.append({"name": name})
@@ -53,7 +54,7 @@ def preview_remote(api: sly.Api, task_id, context, state, app_logger):
             raise FileNotFoundError("meta.json")
 
         fields = [
-            #{"field": "state.projectName", "payload": slugify(project_name, lowercase=False, save_order=True)},
+            # {"field": "state.projectName", "payload": slugify(project_name, lowercase=False, save_order=True)},
             {"field": "state.projectName", "payload": project_name},
             {"field": "data.listing", "payload": listing},
             {"field": "state.listingFlags", "payload": listing_flags},
@@ -89,6 +90,7 @@ def deselect_all(api: sly.Api, task_id, context, state, app_logger):
     if len(new_flags) > 0:
         api.task.set_field(task_id, "state.listingFlags", new_flags)
 
+
 def _show_error(api, task_id, field, error, app_logger):
     app_logger.warn(error)
     fields = [
@@ -97,12 +99,14 @@ def _show_error(api, task_id, field, error, app_logger):
     ]
     api.app.set_fields(task_id, fields)
 
+
 def _increment_ds_progress(task_id, api, current, total):
     fields = [
         {"field": "data.uploadedDsCount", "payload": current},
         {"field": "data.uploadDsProgress", "payload": int(current * 100 / total)},
     ]
     api.app.set_fields(task_id, fields)
+
 
 def _increment_task_progress(task_id, api: sly.Api, sly_progress: sly.Progress):
     fields = [
@@ -111,6 +115,7 @@ def _increment_task_progress(task_id, api: sly.Api, sly_progress: sly.Progress):
     ]
     api.app.set_fields(task_id, fields)
     pass
+
 
 @my_app.callback("start_import")
 @sly.timeit
@@ -133,13 +138,13 @@ def start_import(api: sly.Api, task_id, context, state, app_logger):
     listing_flags = state["listingFlags"]
 
     workspace_name = state["workspaceName"]
-    project_name = state["projectName"] #slugify(state["projectName"], lowercase=False, save_order=True)
+    project_name = state["projectName"]  # slugify(state["projectName"], lowercase=False, save_order=True)
     if project_name == "":
         _show_error(api, task_id, "data.destinationError", "Project name is not defined", app_logger)
         return
 
-    #@TODO: will be added in future releases
-    add_to_existing_project = False #state["addToExisting"]
+    # @TODO: will be added in future releases
+    add_to_existing_project = False  # state["addToExisting"]
 
     existing_meta = None
     try:
@@ -155,7 +160,8 @@ def start_import(api: sly.Api, task_id, context, state, app_logger):
             project = api.project.create(workspace.id, project_name)
             app_logger.info("Project {!r} is created".format(project.name))
         else:
-            _show_error(api, task_id, "data.destinationError", "Project {!r} already exists".format(project.name), app_logger)
+            _show_error(api, task_id, "data.destinationError", "Project {!r} already exists".format(project.name),
+                        app_logger)
             return
 
             if add_to_existing_project is False:
@@ -205,8 +211,8 @@ def start_import(api: sly.Api, task_id, context, state, app_logger):
                 _increment_ds_progress(task_id, api, index + 1, len(datasets_to_upload))
                 continue
 
-            #img_dir = reduce(urljoin, [remote_dir, dataset_name, 'img'])
-            #ann_dir = reduce(urljoin, [remote_dir, dataset_name, 'ann'])
+            # img_dir = reduce(urljoin, [remote_dir, dataset_name, 'img'])
+            # ann_dir = reduce(urljoin, [remote_dir, dataset_name, 'ann'])
             img_dir = os.path.join(remote_dir, dataset_name, 'img/')
             ann_dir = os.path.join(remote_dir, dataset_name, 'ann/')
 
@@ -229,7 +235,7 @@ def start_import(api: sly.Api, task_id, context, state, app_logger):
                     for file_entry in batch:
                         name = file_entry.name
                         try:
-                            img_url = urljoin(img_dir, name) #'https://i.imgur.com/uFYNj9Z.jpg'
+                            img_url = urljoin(img_dir, name)  # 'https://i.imgur.com/uFYNj9Z.jpg'
                             ann_url = urljoin(ann_dir, name + sly.ANN_EXT)
 
                             resp = requests.get(ann_url)
@@ -261,7 +267,7 @@ def start_import(api: sly.Api, task_id, context, state, app_logger):
                     task_progress.iters_done_report(len(batch))
                     _increment_task_progress(task_id, api, task_progress)
 
-                    #only once + to check the image urls are loaded correctly
+                    # only once + to check the image urls are loaded correctly
                     if update_res_project_icon is None:
                         pinfo = api.project.get_info_by_id(project.id)
                         if pinfo.reference_image_url is None:
@@ -282,7 +288,7 @@ def start_import(api: sly.Api, task_id, context, state, app_logger):
 
 
 def main():
-    sly.logger.info("Script arguments from modal dialog box",  extra={})
+    sly.logger.info("Script arguments from modal dialog box", extra={})
 
     api = sly.Api.from_env()
     team = api.team.get_info_by_id(TEAM_ID)
@@ -308,9 +314,9 @@ def main():
     }
 
     state = {
-        #"remoteDir": "http://localhost:8088/my_sly_project/",
-        #"remoteDir": "http://172.20.10.2:8088/my_sly_project/",
-        "remoteDir":  "", #"http://172.17.0.1:8088/lemons_annotated_2/",
+        # "remoteDir": "http://localhost:8088/my_sly_project/",
+        # "remoteDir": "http://172.20.10.2:8088/my_sly_project/",
+        "remoteDir": "",  # "http://172.17.0.1:8088/lemons_annotated_2/",
         "teamName": team.name,
         "workspaceName": workspace.name,
         "projectName": "",
@@ -321,7 +327,8 @@ def main():
     # Run application service
     my_app.run(data=data, state=state)
 
-#@TODO: slugify names
-#@TODO: nginx volume - slow start??
+
+# @TODO: slugify names
+# @TODO: nginx volume - slow start??
 if __name__ == "__main__":
     sly.main_wrapper("main", main)
