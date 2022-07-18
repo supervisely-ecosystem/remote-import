@@ -6,7 +6,7 @@ on:
       tag_version:
         description: 'Docker Image Tag'     
         required: true
-        default: 
+        default: ''
 
 jobs:
   docker:
@@ -29,4 +29,5 @@ jobs:
         uses: docker/build-push-action@v3
         with:
           push: true
+          file: docker/Dockerfile
           tags: supervisely/remote-import:${{ github.event.inputs.tag_version }}
