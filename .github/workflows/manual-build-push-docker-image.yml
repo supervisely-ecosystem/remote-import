@@ -3,14 +3,10 @@ name: Dokcer Image CI
 on: 
   workflow_dispatch:
     inputs:
-      branch:
-        description: 'Branch'     
-        required: true
-        default: 'master'
       tag_version:
         description: 'Docker Image Tag'     
         required: true
-        default: 'prod'
+        default: 
 
 jobs:
   docker:
