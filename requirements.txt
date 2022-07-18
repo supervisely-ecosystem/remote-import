@@ -1,1 +1,2 @@
-supervisely[apps]==6.35.0
+htmllistparse==0.6.0
+supervisely[apps]==6.36.0
