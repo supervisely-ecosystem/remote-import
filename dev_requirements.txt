@@ -1,0 +1,2 @@
+htmllistparse==0.6.0
+supervisely==6.72.55
