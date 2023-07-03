@@ -29,7 +29,7 @@ Connect your remote data storage to Supervisely Platform without data duplicatio
 
 If you have ideas or suggestions, please post an idea in 💡[Supervisely Ideas Exchange](https://ideas.supervise.ly/) or chat with us in slack. 
 
-<img src="https://i.imgur.com/AmnUCBV.png"/>
+<img src="media/ov1.png"/>
 
 
 ## Preparation
@@ -44,7 +44,7 @@ If you have ideas or suggestions, please post an idea in 💡[Supervisely Ideas 
 
 Now you can check that data is accesible in browser:
 
-<img src="https://media4.giphy.com/media/tgVlRYEBJKsGbZfZnM/giphy.gif"/>
+<img src="media/pr1.gif"/>
 
 ## How To Run 
 **Step 1**: Add app to your team from Ecosystem if it is not there.
