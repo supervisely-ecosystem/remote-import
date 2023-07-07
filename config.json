@@ -14,8 +14,8 @@
   "modal_template_state": {},
   "task_location": "workspace_tasks",
   "isolate": true,
-  "icon_backup": "https://img.icons8.com/color/96/000000/cloud-link.png",
-  "icon": "https://img.icons8.com/color/96/000000/cloud-storage.png",
+  "icon_backup": "media/icon1.png",
+  "icon": "media/icon.png",
   "icon_background": "#FFFFFF",
   "poster": "https://user-images.githubusercontent.com/48245050/182372844-1b874c60-530f-4b24-9e98-4875648b1e0e.png"
 }
