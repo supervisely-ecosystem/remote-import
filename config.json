@@ -1,21 +1,21 @@
 {
-  "name": "Remote import",
-  "type": "app",
-  "categories": [
-    "import",
-    "images"
-  ],
-  "description": "Connect your remote storage and import data without duplication. Data is stored on your server but visible in Supervisely",
-  "docker_image": "supervisely/import-export:0.0.1",
-  "instance_version": "6.4.57",
-  "main_script": "src/remote_import.py",
-  "gui_template": "src/gui.html",
-  "modal_template": "src/modal.html",
-  "modal_template_state": {},
-  "task_location": "workspace_tasks",
-  "isolate": true,
-  "icon_backup": "https://img.icons8.com/color/96/000000/cloud-link.png",
-  "icon": "https://img.icons8.com/color/96/000000/cloud-storage.png",
-  "icon_background": "#FFFFFF",
-  "poster": "https://user-images.githubusercontent.com/48245050/182372844-1b874c60-530f-4b24-9e98-4875648b1e0e.png"
+    "name": "Remote import",
+    "type": "app",
+    "categories": [
+        "import",
+        "images"
+    ],
+    "description": "Connect your remote storage and import data without duplication. Data is stored on your server but visible in Supervisely",
+    "docker_image": "supervisely/import-export:0.0.1",
+    "instance_version": "6.4.57",
+    "main_script": "src/remote_import.py",
+    "gui_template": "src/gui.html",
+    "modal_template": "src/modal.html",
+    "modal_template_state": {},
+    "task_location": "workspace_tasks",
+    "isolate": true,
+    "icon_backup": "https://img.icons8.com/color/96/000000/cloud-link.png",
+    "icon": "https://img.icons8.com/color/96/000000/cloud-storage.png",
+    "icon_background": "#FFFFFF",
+    "poster": "https://user-images.githubusercontent.com/48245050/182372844-1b874c60-530f-4b24-9e98-4875648b1e0e.png"
 }
