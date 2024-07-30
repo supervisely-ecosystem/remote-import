@@ -35,14 +35,12 @@ def preview_remote(api: sly.Api, task_id, context, state, app_logger):
         parts = urlparse(remote_dir)
         project_name = parts.path.rstrip("/")
         if project_name not in ["", "/"]:
-            project_name = sly.fs.get_file_name(
-                project_name
-            )  # last directory name from path
+            project_name = sly.fs.get_file_name(project_name)  # last directory name from path
         else:
             project_name = ""
 
         cwd, raw_listing = htmllistparse.fetch_listing(remote_dir, timeout=30)
-
+        sly.logger.debug("Raw listing: {}".format(raw_listing))
         listing = []
         listing_flags = []
         meta_json_exists = False
@@ -225,9 +223,7 @@ def start_import(api: sly.Api, task_id, context, state, app_logger):
             dataset_name = ds_info["name"]
             if flags["selected"] is False:
                 app_logger.info(
-                    "Folder {!r} is not selected, it will be skipped".format(
-                        dataset_name
-                    )
+                    "Folder {!r} is not selected, it will be skipped".format(dataset_name)
                 )
                 continue
             if flags["disabled"] is True:
@@ -243,9 +239,7 @@ def start_import(api: sly.Api, task_id, context, state, app_logger):
                 app_logger.info("Dataset {!r} is created".format(dataset.name))
             else:
                 app_logger.warn(
-                    "Dataset {!r} already exists. Uploading is skipped".format(
-                        dataset.name
-                    )
+                    "Dataset {!r} already exists. Uploading is skipped".format(dataset.name)
                 )
                 _increment_ds_progress(task_id, api, index + 1, len(datasets_to_upload))
                 continue
@@ -276,16 +270,12 @@ def start_import(api: sly.Api, task_id, context, state, app_logger):
                     for file_entry in batch:
                         name = file_entry.name
                         try:
-                            img_url = urljoin(
-                                img_dir, name
-                            )  # 'https://i.imgur.com/uFYNj9Z.jpg'
+                            img_url = urljoin(img_dir, name)  # 'https://i.imgur.com/uFYNj9Z.jpg'
                             ann_url = urljoin(ann_dir, name + sly.ANN_EXT)
 
                             resp = requests.get(ann_url)
                             if resp.status_code == 404:
-                                ann_url = urljoin(
-                                    ann_dir, sly.fs.get_file_name(name) + sly.ANN_EXT
-                                )
+                                ann_url = urljoin(ann_dir, sly.fs.get_file_name(name) + sly.ANN_EXT)
                                 resp = requests.get(ann_url)
 
                             resp.raise_for_status()
@@ -304,9 +294,7 @@ def start_import(api: sly.Api, task_id, context, state, app_logger):
                         image_urls_batch.append(img_url)
                         annotations_batch.append(ann)
 
-                    img_infos = api.image.upload_links(
-                        dataset.id, names, image_urls_batch
-                    )
+                    img_infos = api.image.upload_links(dataset.id, names, image_urls_batch)
                     uploaded_ids = [img_info.id for img_info in img_infos]
                     api.annotation.upload_anns(uploaded_ids, annotations_batch)
                     uploaded_to_dataset += len(uploaded_ids)
