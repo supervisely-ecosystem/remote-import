@@ -34,11 +34,15 @@ Connect your remote data storage to Supervisely Platform without data duplicatio
 
 0. Be sure that docker is installed on the server.
 1. Go to your server and `cd` to directory with the data you want to connect. For example: `cd work/data`. We recommend to avoid using special characters in paths (spaces, etc...).
-2. Run NGINX to to serve static files (images and annotation) by executing the following command: 
+2. Run NGINX to serve static files (images and annotation) by executing the following command: 
 
-`docker run -p 8088:80 -v $(pwd):/mnt/data jetbrainsinfra/nginx-file-listing:0.2`
+    `docker run -p 8088:80 -v $(pwd):/mnt/data --name remote_import jetbrainsinfra/nginx-file-listing:0.2`
 
 3. ⚠️ By default your new nginx web server is available for outside world. If needed, change `nginx.conf` to disallow it.
+    <details>
+    <summary>ℹ️ In case you have trouble getting data</summary>
+       The best way to share your data outside is to use software like <a href="https://ngrok.com/">ngrok</a>
+    </details>
 
 Now you can check that data is accesible in browser:
 
