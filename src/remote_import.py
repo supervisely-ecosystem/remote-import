@@ -7,6 +7,7 @@ import supervisely as sly
 from supervisely.app.v1.app_service import AppService
 from slugify import slugify
 from functools import reduce
+from workflow import Workflow
 
 my_app: AppService = AppService(ignore_task_id=True)
 
@@ -282,7 +283,10 @@ def start_import(api: sly.Api, task_id, context, state, app_logger):
     except Exception as e:
         app_logger.error(repr(e))
         api.task.set_field(task_id, "data.uploadError", repr(e))
-
+    # -------------------------------------- Add Workflow Output ------------------------------------- #
+    workflow = Workflow(api)
+    workflow.add_output(project.id)
+    # ----------------------------------------------- - ---------------------------------------------- #
     api.task.set_output_project(task_id, project.id, project.name)
     my_app.stop()
 
