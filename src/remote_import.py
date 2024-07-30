@@ -1,18 +1,26 @@
 import os
-from urllib.parse import urlparse, urljoin
+
+# import time
+from urllib.parse import urljoin, urlparse
+
 import htmllistparse
 import requests
-import time
 import supervisely as sly
+from dotenv import load_dotenv
 from supervisely.app.v1.app_service import AppService
-from slugify import slugify
-from functools import reduce
-from workflow import Workflow
+
+# from slugify import slugify
+# from functools import reduce
+from src.workflow import Workflow
+
+if sly.is_development():
+    load_dotenv("local.env")
+    load_dotenv(os.path.expanduser("~/supervisely.env"))
 
 my_app: AppService = AppService(ignore_task_id=True)
 
-TEAM_ID = int(os.environ['context.teamId'])
-WORKSPACE_ID = int(os.environ['context.workspaceId'])
+TEAM_ID = int(os.environ["context.teamId"])
+WORKSPACE_ID = int(os.environ["context.workspaceId"])
 
 listing = []
 
@@ -27,7 +35,9 @@ def preview_remote(api: sly.Api, task_id, context, state, app_logger):
         parts = urlparse(remote_dir)
         project_name = parts.path.rstrip("/")
         if project_name not in ["", "/"]:
-            project_name = sly.fs.get_file_name(project_name)  # last directory name from path
+            project_name = sly.fs.get_file_name(
+                project_name
+            )  # last directory name from path
         else:
             project_name = ""
 
@@ -39,7 +49,7 @@ def preview_remote(api: sly.Api, task_id, context, state, app_logger):
         for file_entry in raw_listing:
             name = file_entry.name
             # name = slugify(name, lowercase=False, save_order=True)
-            if name == 'meta.json':
+            if name == "meta.json":
                 meta_json_exists = True
                 listing.append({"name": name})
                 listing_flags.append({"selected": True, "disabled": True})
@@ -112,7 +122,10 @@ def _increment_ds_progress(task_id, api, current, total):
 def _increment_task_progress(task_id, api: sly.Api, sly_progress: sly.Progress):
     fields = [
         {"field": "data.uploadedCount", "payload": sly_progress.current},
-        {"field": "data.uploadProgress", "payload": int(sly_progress.current * 100 / sly_progress.total)},
+        {
+            "field": "data.uploadProgress",
+            "payload": int(sly_progress.current * 100 / sly_progress.total),
+        },
     ]
     api.app.set_fields(task_id, fields)
     pass
@@ -139,9 +152,17 @@ def start_import(api: sly.Api, task_id, context, state, app_logger):
     listing_flags = state["listingFlags"]
 
     workspace_name = state["workspaceName"]
-    project_name = state["projectName"]  # slugify(state["projectName"], lowercase=False, save_order=True)
+    project_name = state[
+        "projectName"
+    ]  # slugify(state["projectName"], lowercase=False, save_order=True)
     if project_name == "":
-        _show_error(api, task_id, "data.destinationError", "Project name is not defined", app_logger)
+        _show_error(
+            api,
+            task_id,
+            "data.destinationError",
+            "Project name is not defined",
+            app_logger,
+        )
         return
 
     # @TODO: will be added in future releases
@@ -161,15 +182,24 @@ def start_import(api: sly.Api, task_id, context, state, app_logger):
             project = api.project.create(workspace.id, project_name)
             app_logger.info("Project {!r} is created".format(project.name))
         else:
-            _show_error(api, task_id, "data.destinationError", "Project {!r} already exists".format(project.name),
-                        app_logger)
+            _show_error(
+                api,
+                task_id,
+                "data.destinationError",
+                "Project {!r} already exists".format(project.name),
+                app_logger,
+            )
             return
 
             if add_to_existing_project is False:
-                app_logger.warn("Project {!r} already exists. Allow add to existing project or change the name of "
-                                "destination project. We recommend to upload to new project. Thus the existing project "
-                                "will be safe. New name will be generated".format(project.name))
-                project = api.project.create(workspace.id, project_name, change_name_if_conflict=True)
+                app_logger.warn(
+                    "Project {!r} already exists. Allow add to existing project or change the name of "
+                    "destination project. We recommend to upload to new project. Thus the existing project "
+                    "will be safe. New name will be generated".format(project.name)
+                )
+                project = api.project.create(
+                    workspace.id, project_name, change_name_if_conflict=True
+                )
             else:
                 existing_meta_json = api.project.get_meta(project.id)
                 existing_meta = sly.ProjectMeta.from_json(existing_meta_json)
@@ -182,7 +212,7 @@ def start_import(api: sly.Api, task_id, context, state, app_logger):
         ]
         api.app.set_fields(task_id, fields)
 
-        resp = requests.get(urljoin(remote_dir, 'meta.json'))
+        resp = requests.get(urljoin(remote_dir, "meta.json"))
         meta_json = resp.json()
         meta = sly.ProjectMeta.from_json(meta_json)
         if existing_meta is not None:
@@ -192,9 +222,13 @@ def start_import(api: sly.Api, task_id, context, state, app_logger):
 
         datasets_to_upload = []
         for ds_info, flags in zip(listing, listing_flags):
-            dataset_name = ds_info['name']
+            dataset_name = ds_info["name"]
             if flags["selected"] is False:
-                app_logger.info("Folder {!r} is not selected, it will be skipped".format(dataset_name))
+                app_logger.info(
+                    "Folder {!r} is not selected, it will be skipped".format(
+                        dataset_name
+                    )
+                )
                 continue
             if flags["disabled"] is True:
                 app_logger.info("File {!r} is skipped".format(dataset_name))
@@ -208,14 +242,18 @@ def start_import(api: sly.Api, task_id, context, state, app_logger):
                 dataset = api.dataset.create(project.id, dataset_name)
                 app_logger.info("Dataset {!r} is created".format(dataset.name))
             else:
-                app_logger.warn("Dataset {!r} already exists. Uploading is skipped".format(dataset.name))
+                app_logger.warn(
+                    "Dataset {!r} already exists. Uploading is skipped".format(
+                        dataset.name
+                    )
+                )
                 _increment_ds_progress(task_id, api, index + 1, len(datasets_to_upload))
                 continue
 
             # img_dir = reduce(urljoin, [remote_dir, dataset_name, 'img'])
             # ann_dir = reduce(urljoin, [remote_dir, dataset_name, 'ann'])
-            img_dir = os.path.join(remote_dir, dataset_name, 'img/')
-            ann_dir = os.path.join(remote_dir, dataset_name, 'ann/')
+            img_dir = os.path.join(remote_dir, dataset_name, "img/")
+            ann_dir = os.path.join(remote_dir, dataset_name, "ann/")
 
             cwd, img_listing = htmllistparse.fetch_listing(img_dir, timeout=30)
 
@@ -226,7 +264,9 @@ def start_import(api: sly.Api, task_id, context, state, app_logger):
             ]
             api.app.set_fields(task_id, fields)
 
-            task_progress = sly.Progress("Uploading dataset {!r}".format(dataset.name), len(img_listing))
+            task_progress = sly.Progress(
+                "Uploading dataset {!r}".format(dataset.name), len(img_listing)
+            )
             for batch in sly.batched(img_listing, batch_size=50):
                 try:
                     names = []
@@ -236,12 +276,16 @@ def start_import(api: sly.Api, task_id, context, state, app_logger):
                     for file_entry in batch:
                         name = file_entry.name
                         try:
-                            img_url = urljoin(img_dir, name)  # 'https://i.imgur.com/uFYNj9Z.jpg'
+                            img_url = urljoin(
+                                img_dir, name
+                            )  # 'https://i.imgur.com/uFYNj9Z.jpg'
                             ann_url = urljoin(ann_dir, name + sly.ANN_EXT)
 
                             resp = requests.get(ann_url)
                             if resp.status_code == 404:
-                                ann_url = urljoin(ann_dir, sly.fs.get_file_name(name) + sly.ANN_EXT)
+                                ann_url = urljoin(
+                                    ann_dir, sly.fs.get_file_name(name) + sly.ANN_EXT
+                                )
                                 resp = requests.get(ann_url)
 
                             resp.raise_for_status()
@@ -249,21 +293,29 @@ def start_import(api: sly.Api, task_id, context, state, app_logger):
 
                             ann = sly.Annotation.from_json(ann_json, meta)
                         except Exception as e:
-                            app_logger.warn("Image {!r} and annotation {!r} are skipped due to error: {}"
-                                            .format(img_url, ann_url, repr(e)))
+                            app_logger.warn(
+                                "Image {!r} and annotation {!r} are skipped due to error: {}".format(
+                                    img_url, ann_url, repr(e)
+                                )
+                            )
                             continue
 
                         names.append(name)
                         image_urls_batch.append(img_url)
                         annotations_batch.append(ann)
 
-                    img_infos = api.image.upload_links(dataset.id, names, image_urls_batch)
+                    img_infos = api.image.upload_links(
+                        dataset.id, names, image_urls_batch
+                    )
                     uploaded_ids = [img_info.id for img_info in img_infos]
                     api.annotation.upload_anns(uploaded_ids, annotations_batch)
                     uploaded_to_dataset += len(uploaded_ids)
                 except Exception as e:
-                    app_logger.warn("Batch ({} items) of images is skipped due to error: {}"
-                                    .format(len(batch), repr(e)))
+                    app_logger.warn(
+                        "Batch ({} items) of images is skipped due to error: {}".format(
+                            len(batch), repr(e)
+                        )
+                    )
                 finally:
                     task_progress.iters_done_report(len(batch))
                     _increment_task_progress(task_id, api, task_progress)
@@ -272,13 +324,24 @@ def start_import(api: sly.Api, task_id, context, state, app_logger):
                     if update_res_project_icon is None:
                         pinfo = api.project.get_info_by_id(project.id)
                         if pinfo.reference_image_url is None:
-                            raise RuntimeError("Preview image is not accessible. Check that image URLs are public.")
-                        update_res_project_icon = api.image.preview_url(pinfo.reference_image_url, 100, 100),
-                        api.task.set_field(task_id, "data.resultProjectPreviewUrl", update_res_project_icon)
+                            raise RuntimeError(
+                                "Preview image is not accessible. Check that image URLs are public."
+                            )
+                        update_res_project_icon = (
+                            api.image.preview_url(pinfo.reference_image_url, 100, 100),
+                        )
+                        api.task.set_field(
+                            task_id,
+                            "data.resultProjectPreviewUrl",
+                            update_res_project_icon,
+                        )
 
             _increment_ds_progress(task_id, api, index + 1, len(datasets_to_upload))
-            app_logger.info("Dataset {!r} is uploaded: {} images with annotations"
-                            .format(dataset.name, uploaded_to_dataset))
+            app_logger.info(
+                "Dataset {!r} is uploaded: {} images with annotations".format(
+                    dataset.name, uploaded_to_dataset
+                )
+            )
 
     except Exception as e:
         app_logger.error(repr(e))
@@ -325,7 +388,7 @@ def main():
         "workspaceName": workspace.name,
         "projectName": "",
         "listingFlags": [],
-        "addToExisting": False
+        "addToExisting": False,
     }
 
     # Run application service
