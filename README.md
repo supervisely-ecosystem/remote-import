@@ -39,6 +39,10 @@ Connect your remote data storage to Supervisely Platform without data duplicatio
     `docker run -p 8088:80 -v $(pwd):/mnt/data --name remote_import jetbrainsinfra/nginx-file-listing:0.2`
 
 3. ⚠️ By default your new nginx web server is available for outside world. If needed, change `nginx.conf` to disallow it.
+    <details>
+    <summary>ℹ️ In case you have trouble getting data</summary>
+       The best way to share your data outside is to use software like <a href="https://ngrok.com/">ngrok</a>
+    </details>
 
 Now you can check that data is accesible in browser:
 
