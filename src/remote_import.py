@@ -31,6 +31,7 @@ def preview_remote(api: sly.Api, task_id, context, state, app_logger):
     global listing
     api.task.set_field(task_id, "data.previewError", "")
     try:
+        sly.logger.debug("State: {}".format(state))
         remote_dir = state["remoteDir"]
         parts = urlparse(remote_dir)
         project_name = parts.path.rstrip("/")
@@ -39,8 +40,12 @@ def preview_remote(api: sly.Api, task_id, context, state, app_logger):
         else:
             project_name = ""
 
+        sly.logger.debug(f"Remote dir: {remote_dir}")
         cwd, raw_listing = htmllistparse.fetch_listing(remote_dir, timeout=30)
-        sly.logger.debug("Raw listing: {}".format(raw_listing))
+        if raw_listing != []:
+            sly.logger.debug("Raw listing: {}".format(raw_listing))
+        else:
+            sly.logger.debug("Raw listing is empty")
         listing = []
         listing_flags = []
         meta_json_exists = False
