@@ -1,16 +1,15 @@
 import os
-
-# import time
+import time
+from functools import reduce
 from urllib.parse import urljoin, urlparse
 
 import htmllistparse
 import requests
 import supervisely as sly
 from dotenv import load_dotenv
+from slugify import slugify
 from supervisely.app.v1.app_service import AppService
 
-# from slugify import slugify
-# from functools import reduce
 from src.workflow import Workflow
 
 if sly.is_development():
@@ -31,7 +30,7 @@ def preview_remote(api: sly.Api, task_id, context, state, app_logger):
     global listing
     api.task.set_field(task_id, "data.previewError", "")
     try:
-        sly.logger.debug("State: {}".format(state))
+        sly.logger.debug("State in preview_remote: {}".format(state))
         remote_dir = state["remoteDir"]
         parts = urlparse(remote_dir)
         project_name = parts.path.rstrip("/")
@@ -40,12 +39,9 @@ def preview_remote(api: sly.Api, task_id, context, state, app_logger):
         else:
             project_name = ""
 
-        sly.logger.debug(f"Remote dir: {remote_dir}")
         cwd, raw_listing = htmllistparse.fetch_listing(remote_dir, timeout=30)
-        if raw_listing != []:
-            sly.logger.debug("Raw listing: {}".format(raw_listing))
-        else:
-            sly.logger.debug("Raw listing is empty")
+        sly.logger.debug("Raw listing in preview_remote: {}".format(raw_listing))
+
         listing = []
         listing_flags = []
         meta_json_exists = False
@@ -137,6 +133,7 @@ def _increment_task_progress(task_id, api: sly.Api, sly_progress: sly.Progress):
 @my_app.callback("start_import")
 @sly.timeit
 def start_import(api: sly.Api, task_id, context, state, app_logger):
+    sly.logger.debug("State in start_import: {}".format(state))
     fields = [
         {"field": "data.destinationError", "payload": ""},
         {"field": "data.uploadError", "payload": ""},
@@ -255,6 +252,7 @@ def start_import(api: sly.Api, task_id, context, state, app_logger):
             ann_dir = os.path.join(remote_dir, dataset_name, "ann/")
 
             cwd, img_listing = htmllistparse.fetch_listing(img_dir, timeout=30)
+            sly.logger.debug("Image listing in start_import: {}".format(img_listing))
 
             uploaded_to_dataset = 0
             fields = [
