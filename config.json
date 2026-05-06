@@ -6,8 +6,8 @@
     "images"
   ],
   "description": "Connect your remote storage and import data without duplication. Data is stored on your server but visible in Supervisely",
-  "docker_image": "supervisely/import-export:6.73.532",
-  "instance_version": "6.15.40",
+  "docker_image": "supervisely/import-export:6.73.564",
+  "instance_version": "6.15.60",
   "main_script": "src/remote_import.py",
   "gui_template": "src/gui.html",
   "modal_template": "src/modal.html",
